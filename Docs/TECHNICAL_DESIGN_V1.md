@@ -3,7 +3,8 @@
 ## 1. 技术栈
 
 - SwiftUI：应用 UI。
-- SwiftData：本地持久化。
+- SwiftData：本地持久化和模型管理。
+- CloudKit：用户自己的设备之间同步文字数据。
 - XiaoyaGrowthCore：纯业务逻辑模块。
 - PhotosUI：照片选择入口。
 - ShareLink：系统分享。
@@ -19,6 +20,8 @@ Sources/XiaoyaGrowthCore
 ├── Models.swift
 ├── TimeCalculator.swift
 ├── TreeStateCalculator.swift
+├── GrowthForestState.swift
+├── ICloudSyncStatus.swift
 ├── ShareCardCopyBuilder.swift
 └── MilestoneTemplates.swift
 
@@ -86,7 +89,103 @@ Tests/XiaoyaGrowthCoreTests
 - `timeTagText(mode:profile:today:calendar:)`
 - `treeStage(recordCount:)`
 - `treeDecorations(records:)`
+- `GrowthForestState(recordCount:)`
+- `ICloudSyncStatusCopyBuilder.copy(for:)`
 - `shareCardText(profile:record:calendar:)`
+
+### GrowthTreeView 阶段映射
+
+首页 `GrowthTreeView` 的主体不再由代码重新绘制树，而是使用 36 张 PNG：
+
+```text
+tree_stage_01 ... tree_stage_36
+```
+
+映射规则：
+
+```swift
+if recordCount <= 0 {
+    imageName = "tree_stage_01"
+} else if recordCount >= 35 {
+    imageName = "tree_stage_36"
+} else {
+    imageName = String(format: "tree_stage_%02d", recordCount + 1)
+}
+```
+
+当前 V1 单棵树容量为 35 条记录。`recordCount >= 35` 后，主树保持 `tree_stage_36`。
+
+### 多树扩展公式
+
+未来支持几百、几千条记录时，不继续增加单棵树图片数量，而是按 35 条记录生成一棵树：
+
+```swift
+let recordsPerTree = 35
+let completedTreeCount = recordCount / recordsPerTree
+let activeTreeProgress = recordCount % recordsPerTree
+let activeTreeImageIndex = min(max(activeTreeProgress + 1, 1), 36)
+```
+
+边界说明：
+
+- `recordCount == 0`：0 棵完成树，当前树 `tree_stage_01`。
+- `recordCount == 35`：1 棵完成树，当前主视觉可显示满树 `tree_stage_36`。
+- `recordCount == 36`：1 棵完成树，第 2 棵树进入 `tree_stage_02`。
+- `recordCount == 70`：2 棵完成树，当前主视觉可显示第 2 棵满树或等待第 3 棵发芽。
+- `recordCount == 71`：2 棵完成树，第 3 棵树进入 `tree_stage_02`。
+
+V1 暂不新增森林数据模型。森林状态仍可由 `MilestoneRecord` 数量派生，不落库。
+
+### GrowthTreeView 动画职责
+
+`GrowthTreeView` 只负责视觉表达，不修改业务逻辑和数据模型：
+
+- 根据 `recordCount` 计算目标图片名。
+- 图片变化时同时叠加旧图和新图。
+- 旧图淡出并缩小，新图淡入并轻微放大。
+- 新图出现时触发一次轻微 green glow。
+- 非 Reduce Motion 状态下展示少量 leaf/sparkle 粒子。
+- Reduce Motion 开启时只保留 opacity 淡入淡出。
+- 分享卡导出图片时可关闭动画，直接渲染最终状态。
+
+### UI/交互收敛
+
+- 首页不保留下方历史记录卡片；历史入口只通过左上角时光轴按钮进入。
+- `RecordEditorView` 不再展示心情选择器，保存时 `moodTags` 写入空数组。
+- `RecordEditorView` 分类选择器过滤 `.custom`，避免无完整流程的自定义分类入口。
+- 新手引导页不展示头像切换和顶部树模块，创建档案时继续使用默认头像标识。
+- App 内日期选择统一为 `.wheel` DatePicker。
+- 设置页展示 iCloud 同步状态；App 内不提供 iCloud 开关。
+- 历史详情支持删除记录，删除前展示同步删除确认。
+
+### iCloud 同步
+
+V1 使用 SwiftData + CloudKit 私有数据库：
+
+```swift
+ModelConfiguration(
+    schema: schema,
+    isStoredInMemoryOnly: isUITesting,
+    cloudKitDatabase: isUITesting ? .none : .private("iCloud.com.xiaoyagrowth.app")
+)
+```
+
+同步范围：
+
+- `BabyProfile`
+- `MilestoneRecord`
+
+不同步：
+
+- 本机相册图片文件。
+- 家庭共享权限。
+- 多宝宝关系。
+
+工程配置：
+
+- App target 使用 `App/XiaoyaGrowthApp/XiaoyaGrowthApp.entitlements`。
+- CloudKit Container 为 `iCloud.com.xiaoyagrowth.app`。
+- UI 测试使用内存数据库并关闭 CloudKit。
 
 ## 5. 工程生成
 
@@ -152,9 +251,10 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 V1 预留但不实现：
 
 - Widget Snapshot：未来从 Core 派生只读快照。
-- iCloud：未来替换/扩展 Repository 层。
+- 图片 iCloud 同步：V1.1 需要重新设计图片存储和迁移策略。
 - NutrientRecord：V1.1 养料闭环可新增模型，也可复用轻量记录逻辑。
 - GrowthMetricRecord：身高体重趣味卡后续独立实现。
+- Forest Snapshot：未来从记录数量派生多棵树状态，用于展示小森林，不需要新增事实数据模型。
 
 ## 9. Prototype Import
 

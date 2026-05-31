@@ -19,3 +19,27 @@ The project uses semantic versioning for product releases:
 - XcodeGen project configuration for maintainable Xcode project generation.
 - Initial product, design, and technical documentation set.
 - Imported Inspire Prototype v1.9 notes and aligned V1 native scope with prototype states.
+
+## [1.0.0-rc.1] - 2026-05-31
+
+### Added
+
+- Unified XiaoYa design system and native iOS UI polish.
+- 36-stage growth tree assets and animated `GrowthTreeView`.
+- Lightweight forest copy for record counts beyond one completed tree.
+- iCloud private database configuration for syncing baby profile and milestone text data across the user's own devices.
+- Settings iCloud status section with system settings guidance.
+- Milestone deletion flow with confirmation copy for iCloud-synced deletion.
+- README for GitHub and release handoff.
+- UI tests for primary record flow, iCloud settings visibility, and delete confirmation.
+
+### Changed
+
+- Simplified onboarding, record editing, and settings display/edit states.
+- Removed mood entry from the V1 record editor.
+- Updated V1 product, technical, design, test, and iCloud boundary documentation.
+
+### Notes
+
+- V1 does not sync photos through iCloud; image sync is reserved for a later version.
+- App Store upload still requires Apple Developer iCloud/CloudKit capability configuration for `iCloud.com.xiaoyagrowth.app`.

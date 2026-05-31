@@ -16,7 +16,7 @@ struct TemplateListView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: XiaoYaDesignTokens.Spacing.section) {
                 topControls
 
                 ForEach(groupedTemplates, id: \.0) { category, templates in
@@ -24,14 +24,14 @@ struct TemplateListView: View {
                         Label(category.title, systemImage: icon(for: category))
                             .font(.headline)
                             .foregroundStyle(color(for: category))
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, XiaoYaDesignTokens.Spacing.page)
 
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                             ForEach(templates) { template in
                                 templateCard(template)
                             }
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, XiaoYaDesignTokens.Spacing.page)
                     }
                 }
 
@@ -44,19 +44,19 @@ struct TemplateListView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 18)
                         .overlay {
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            RoundedRectangle(cornerRadius: XiaoYaDesignTokens.Radius.card, style: .continuous)
                                 .stroke(style: StrokeStyle(lineWidth: 2, dash: [6, 5]))
                                 .foregroundStyle(Color(uiColor: .systemGray4))
                         }
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, XiaoYaDesignTokens.Spacing.page)
                 .padding(.bottom, 28)
             }
         }
         .navigationTitle("记录新成长")
         .navigationBarTitleDisplayMode(.large)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(XiaoYaDesignTokens.Color.appBackground)
     }
 
     private var topControls: some View {
@@ -69,37 +69,15 @@ struct TemplateListView: View {
             }
             .padding(.horizontal, 14)
             .frame(height: 44)
-            .background(Color(uiColor: .systemBackground))
+            .background(XiaoYaDesignTokens.Color.cardBackground)
             .clipShape(Capsule())
 
-            HStack(spacing: 8) {
-                Label("卡片列表", systemImage: "rectangle.grid.2x2")
-                    .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color(uiColor: .systemBackground))
-                    .clipShape(Capsule())
-
-                Label("岛屿地图", systemImage: "map")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color(uiColor: .tertiarySystemFill))
-                    .clipShape(Capsule())
-                    .overlay(alignment: .topTrailing) {
-                        Text("V2")
-                            .font(.caption2.bold())
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
-                            .background(Color(uiColor: .systemGray))
-                            .clipShape(Capsule())
-                            .offset(x: 4, y: -7)
-                    }
-            }
+            Label("选择一个成长模板，或创建自定义记录", systemImage: "rectangle.grid.2x2")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, XiaoYaDesignTokens.Spacing.page)
         .padding(.top, 16)
     }
 
@@ -121,9 +99,9 @@ struct TemplateListView: View {
                 Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
-            .padding(16)
-            .background(Color(uiColor: .systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .padding(XiaoYaDesignTokens.Spacing.card)
+            .background(XiaoYaDesignTokens.Color.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: XiaoYaDesignTokens.Radius.card, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(template.title)

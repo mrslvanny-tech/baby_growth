@@ -35,6 +35,20 @@
                ReferencedContainer = "container:XiaoyaGrowth.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "18FC979383F6BC3C2D45F5A5"
+               BuildableName = "XiaoyaGrowthUITests.xctest"
+               BlueprintName = "XiaoyaGrowthUITests"
+               ReferencedContainer = "container:XiaoyaGrowth.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -62,6 +76,17 @@
                BlueprintIdentifier = "CE313049FB14E54FD35A8BC4"
                BuildableName = "XiaoyaGrowthCoreTests.xctest"
                BlueprintName = "XiaoyaGrowthCoreTests"
+               ReferencedContainer = "container:XiaoyaGrowth.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "18FC979383F6BC3C2D45F5A5"
+               BuildableName = "XiaoyaGrowthUITests.xctest"
+               BlueprintName = "XiaoyaGrowthUITests"
                ReferencedContainer = "container:XiaoyaGrowth.xcodeproj">
             </BuildableReference>
          </TestableReference>

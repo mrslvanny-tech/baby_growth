@@ -20,8 +20,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>小芽成长需要访问照片，用于为成长记录和纪念卡选择本地图片。</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>小芽成长需要添加纪念卡图片到系统相册。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

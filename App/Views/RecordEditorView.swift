@@ -1,10 +1,10 @@
 import SwiftUI
 import SwiftData
-import PhotosUI
 import XiaoyaGrowthCore
 
 struct RecordEditorView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     let profile: BabyProfile
     let template: MilestoneTemplate?
     let onSaved: (MilestoneRecord) -> Void
@@ -13,9 +13,6 @@ struct RecordEditorView: View {
     @State private var note: String
     @State private var occurredAt: Date
     @State private var category: MilestoneCategory
-    @State private var moodTag: String = "开心"
-    @State private var photoItem: PhotosPickerItem?
-    @State private var mediaLocalIdentifiers: [String] = []
 
     init(profile: BabyProfile, template: MilestoneTemplate?, onSaved: @escaping (MilestoneRecord) -> Void) {
         self.profile = profile
@@ -24,11 +21,15 @@ struct RecordEditorView: View {
         _title = State(initialValue: template?.title == "自定义记录" ? "" : template?.title ?? "")
         _note = State(initialValue: template?.suggestion ?? "")
         _occurredAt = State(initialValue: Date())
-        _category = State(initialValue: template?.category ?? .custom)
+        _category = State(initialValue: template?.category == .custom ? .grossMotor : template?.category ?? .grossMotor)
     }
 
     private var canSave: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var selectableCategories: [MilestoneCategory] {
+        MilestoneCategory.allCases.filter { $0 != .custom }
     }
 
     var body: some View {
@@ -38,12 +39,15 @@ struct RecordEditorView: View {
                     .accessibilityLabel("节点名称")
 
                 Picker("分类", selection: $category) {
-                    ForEach(MilestoneCategory.allCases, id: \.self) { category in
+                    ForEach(selectableCategories, id: \.self) { category in
                         Text(category.title).tag(category)
                     }
                 }
 
                 DatePicker("发生日期", selection: $occurredAt, displayedComponents: .date)
+                    .datePickerStyle(.wheel)
+                    .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
+                    .environment(\.calendar, Calendar(identifier: .gregorian))
                     .accessibilityLabel("发生日期")
             }
 
@@ -53,46 +57,25 @@ struct RecordEditorView: View {
                     .accessibilityLabel("一句话描述")
             }
 
-            Section("照片") {
-                PhotosPicker(selection: $photoItem, matching: .images) {
-                    Label(
-                        mediaLocalIdentifiers.isEmpty ? "选择一张照片" : "已选择照片",
-                        systemImage: "photo"
-                    )
-                }
-                .onChange(of: photoItem) { _, newValue in
-                    if newValue != nil {
-                        mediaLocalIdentifiers = ["local-photo-placeholder"]
-                    }
-                }
-                Text("V1 本地保存照片引用；上架前接入 PhotosPicker 的持久化标识。")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("心情") {
-                Picker("心情标签", selection: $moodTag) {
-                    Text("开心").tag("开心")
-                    Text("惊喜").tag("惊喜")
-                    Text("感动").tag("感动")
-                    Text("平静").tag("平静")
-                }
-                .pickerStyle(.segmented)
-            }
         }
+        .scrollContentBackground(.hidden)
+        .background(XiaoYaDesignTokens.Color.appBackground)
         .navigationTitle(template?.title == "自定义记录" ? "自定义记录" : "编辑记录")
         .navigationBarTitleDisplayMode(.inline)
-        .safeAreaInset(edge: .bottom) {
-            Button(action: save) {
-                Text("保存并点亮小树")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 15)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("取消") {
+                    dismiss()
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color(uiColor: .systemGreen))
+        }
+        .safeAreaInset(edge: .bottom) {
+            XiaoYaPrimaryButton(action: save) {
+                Text("保存并点亮小树")
+            }
             .disabled(!canSave)
-            .padding(.horizontal, 20)
+            .opacity(canSave ? 1 : 0.45)
+            .padding(.horizontal, XiaoYaDesignTokens.Spacing.page)
             .padding(.top, 8)
             .background(.ultraThinMaterial)
             .accessibilityLabel("保存成长记录")
@@ -109,11 +92,11 @@ struct RecordEditorView: View {
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             note: note.trimmingCharacters(in: .whitespacesAndNewlines),
             occurredAt: occurredAt,
-            mediaLocalIdentifiers: mediaLocalIdentifiers,
-            moodTags: [moodTag],
+            moodTags: [],
             visualElementType: decorationType
         )
         modelContext.insert(record)
+        try? modelContext.save()
         onSaved(record)
     }
 }

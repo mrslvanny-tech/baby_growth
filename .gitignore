@@ -6,3 +6,9 @@ DerivedData/
 *.moved-aside
 xcuserdata/
 Package.resolved
+
+# Local source assets and generated export bundles
+image.png
+xiaoya_tree_36_stages_png/
+xiaoya_tree_36_stages_png.zip
+xiaoya_tree_stages_assets.zip

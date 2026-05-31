@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import XiaoyaGrowthCore
 
 struct HistoryListView: View {
@@ -6,78 +7,132 @@ struct HistoryListView: View {
     let records: [MilestoneRecord]
 
     var body: some View {
-        List {
+        ScrollView {
             if records.isEmpty {
-                ContentUnavailableView(
-                    "还没有成长记录",
-                    systemImage: "leaf",
-                    description: Text("点亮第一个成长瞬间，小树就会开始变化。")
+                XiaoYaEmptyState(
+                    title: "还没有成长记录",
+                    message: "点亮第一个成长瞬间，小树就会开始变化。",
+                    systemImage: "leaf.fill"
                 )
+                .padding(XiaoYaDesignTokens.Spacing.page)
             } else {
-                ForEach(records) { record in
-                    NavigationLink {
-                        MilestoneDetailView(profile: profile, record: record)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(record.title)
-                                .font(.headline)
-                            Text(record.category.title)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(record.occurredAt, style: .date)
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
+                LazyVStack(spacing: 12) {
+                    ForEach(records) { record in
+                        NavigationLink {
+                            MilestoneDetailView(profile: profile, record: record, treeRecordCount: records.count)
+                        } label: {
+                            XiaoYaCard {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "leaf.fill")
+                                        .foregroundStyle(XiaoYaDesignTokens.Color.primary)
+                                        .frame(width: 34, height: 34)
+                                        .background(XiaoYaDesignTokens.Color.softPrimary)
+                                        .clipShape(Circle())
+
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(record.title)
+                                            .font(.headline)
+                                            .foregroundStyle(.primary)
+                                        Text(record.category.title)
+                                            .font(XiaoYaDesignTokens.Font.caption)
+                                            .foregroundStyle(.secondary)
+                                        Text(record.occurredAt, style: .date)
+                                            .font(XiaoYaDesignTokens.Font.caption)
+                                            .foregroundStyle(.tertiary)
+                                    }
+
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.tertiary)
+                                }
+                            }
                         }
-                        .padding(.vertical, 4)
+                        .buttonStyle(.plain)
                     }
                 }
+                .padding(XiaoYaDesignTokens.Spacing.page)
             }
         }
         .navigationTitle("历史记录")
+        .background(XiaoYaDesignTokens.Color.appBackground)
     }
 }
 
 struct MilestoneDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     let profile: BabyProfile
     let record: MilestoneRecord
+    let treeRecordCount: Int
     @State private var showingShareCard = false
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: XiaoYaDesignTokens.Spacing.section) {
+                XiaoYaCard {
+                    VStack(alignment: .leading, spacing: 10) {
                     Text(record.title)
-                        .font(.largeTitle.bold())
+                        .font(XiaoYaDesignTokens.Font.title)
                     Label(record.category.title, systemImage: "tag")
                         .foregroundStyle(.secondary)
                     Text(record.occurredAt, style: .date)
+                        .font(XiaoYaDesignTokens.Font.note)
                         .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 if let note = record.note, !note.isEmpty {
-                    Text(note)
-                        .font(.body)
-                        .padding(18)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(uiColor: .secondarySystemBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    XiaoYaCard {
+                        Text(note)
+                            .font(XiaoYaDesignTokens.Font.body)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
 
-                Button {
+                XiaoYaPrimaryButton {
                     showingShareCard = true
                 } label: {
                     Label("生成纪念卡", systemImage: "square.and.arrow.up")
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Color(uiColor: .systemGreen))
             }
-            .padding(20)
+            .padding(XiaoYaDesignTokens.Spacing.page)
         }
         .navigationTitle("成长详情")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showingShareCard) {
-            ShareCardPreviewView(profile: profile, record: record)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(role: .destructive) {
+                    showingDeleteConfirmation = true
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .accessibilityLabel("删除成长记录")
+            }
         }
+        .background(XiaoYaDesignTokens.Color.appBackground)
+        .sheet(isPresented: $showingShareCard) {
+            ShareCardPreviewView(profile: profile, record: record, treeRecordCount: treeRecordCount)
+        }
+        .confirmationDialog(
+            "删除这条成长记录？",
+            isPresented: $showingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("删除记录", role: .destructive) {
+                deleteRecord()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("删除后会从使用 iCloud 的设备中移除，首页小树会按剩余记录重新计算。")
+        }
+    }
+
+    private func deleteRecord() {
+        modelContext.delete(record)
+        try? modelContext.save()
+        dismiss()
     }
 }

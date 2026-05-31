@@ -5,68 +5,56 @@ struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var nickname = "小芽"
     @State private var birthDate = SeedData.defaultBirthDate()
-    @State private var avatarSeed = 1
 
     private var canSubmit: Bool {
         !nickname.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
-        VStack(spacing: 28) {
-            Spacer(minLength: 24)
-
-            VStack(spacing: 12) {
-                AvatarSeedView(seed: avatarSeed, size: 92)
-                Button {
-                    avatarSeed = (avatarSeed % 6) + 1
-                } label: {
-                    Label("换一个头像", systemImage: "arrow.triangle.2.circlepath")
-                        .font(.subheadline.weight(.semibold))
+        ScrollView {
+            VStack(spacing: 24) {
+                VStack(spacing: 10) {
+                    Text("欢迎来到小芽成长")
+                        .font(XiaoYaDesignTokens.Font.title)
+                        .multilineTextAlignment(.center)
+                    Text("记录每一个第一次，\n看着小树慢慢长大。")
+                        .font(XiaoYaDesignTokens.Font.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("随机切换宝宝头像")
+
+                XiaoYaCard {
+                    VStack(spacing: 12) {
+                        TextField("宝宝昵称", text: $nickname)
+                            .textFieldStyle(.roundedBorder)
+                            .accessibilityLabel("宝宝昵称")
+
+                        DatePicker("出生日期", selection: $birthDate, displayedComponents: .date)
+                            .datePickerStyle(.wheel)
+                            .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
+                            .environment(\.calendar, Calendar(identifier: .gregorian))
+                            .accessibilityLabel("宝宝出生日期")
+                    }
+                }
             }
-
-            VStack(spacing: 8) {
-                Text("先认识一下你的小芽")
-                    .font(.largeTitle.bold())
-                    .multilineTextAlignment(.center)
-                Text("之后我们会帮你自动计算宝宝来到世界的第几天。")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            VStack(spacing: 12) {
-                TextField("宝宝昵称", text: $nickname)
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel("宝宝昵称")
-
-                DatePicker("出生日期", selection: $birthDate, displayedComponents: .date)
-                    .datePickerStyle(.compact)
-                    .accessibilityLabel("宝宝出生日期")
-            }
-            .padding(20)
-            .background(.background)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-
-            Spacer()
-
-            Button {
+            .padding(XiaoYaDesignTokens.Spacing.page)
+        }
+        .safeAreaInset(edge: .bottom) {
+            XiaoYaPrimaryButton {
                 createProfile()
             } label: {
                 Text("开始记录成长")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color(uiColor: .systemGreen))
             .disabled(!canSubmit)
+            .opacity(canSubmit ? 1 : 0.45)
             .accessibilityLabel("开始记录成长")
+            .padding(.horizontal, XiaoYaDesignTokens.Spacing.page)
+            .padding(.top, 8)
+            .background(.ultraThinMaterial)
         }
-        .padding(24)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(XiaoYaDesignTokens.Color.appBackground)
     }
 
     private func createProfile() {
@@ -74,7 +62,7 @@ struct OnboardingView: View {
         let profile = BabyProfile(
             nickname: nickname.trimmingCharacters(in: .whitespacesAndNewlines),
             birthDate: birthDate,
-            avatarLocalIdentifier: "seed-\(avatarSeed)"
+            avatarLocalIdentifier: "seed-1"
         )
         modelContext.insert(profile)
     }

@@ -27,7 +27,7 @@
 ## App Store Gate
 
 - App icon and screenshots are final.
-- App privacy nutrition labels match local-only storage behavior.
+- App privacy nutrition labels match local + user-private iCloud sync behavior.
 - Photo permission purpose string is reviewed.
 - Support URL and privacy URL are ready.
 - Build number is higher than the previous App Store Connect build.

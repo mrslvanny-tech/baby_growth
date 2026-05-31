@@ -19,8 +19,6 @@ struct GrowingTreeView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(22)
-        .background(Color(uiColor: .systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
     }
 
     private var backgroundGlow: some View {

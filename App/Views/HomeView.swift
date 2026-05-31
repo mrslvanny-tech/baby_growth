@@ -10,47 +10,25 @@ struct HomeView: View {
     let onSettings: () -> Void
 
     @State private var timeMode: TimeTagMode = .days
-    @State private var showingShareCard = false
-
-    private var treeState: TreeState {
-        TreeStateCalculator.state(records: records.map(\.draft))
-    }
-
-    private var latestRecord: MilestoneRecord? {
-        records.sorted { $0.occurredAt > $1.occurredAt }.first
-    }
-
-    private var selectedRecordForShare: MilestoneRecord? {
-        guard let recordId = saveSuccess?.recordId else { return nil }
-        return records.first { $0.id == recordId }
-    }
+    @State private var shareRecord: MilestoneRecord?
 
     var body: some View {
         ZStack(alignment: .top) {
-            Color(uiColor: .secondarySystemBackground)
+            XiaoYaDesignTokens.Color.appBackground
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: XiaoYaDesignTokens.Spacing.section) {
                     header
-                    GrowingTreeView(treeState: treeState, highlightLatest: saveSuccess != nil)
-                        .frame(height: 360)
-                        .accessibilityLabel("成长树，当前阶段 \(treeState.stage.title)，已点亮 \(treeState.recordCount) 个成长瞬间")
-                    summary
-                    primaryActions
+                    growthTreeHero
                 }
-                .padding(20)
+                .padding(XiaoYaDesignTokens.Spacing.page)
             }
             .safeAreaInset(edge: .bottom) {
-                Button(action: onRecord) {
+                XiaoYaPrimaryButton(action: onRecord) {
                     Label("记录新成长", systemImage: "plus.circle.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 15)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Color(uiColor: .label))
-                .padding(.horizontal, 20)
+                .padding(.horizontal, XiaoYaDesignTokens.Spacing.page)
                 .padding(.top, 8)
                 .background(.ultraThinMaterial)
                 .accessibilityLabel("记录新成长")
@@ -62,13 +40,20 @@ struct HomeView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .navigationTitle("小芽成长")
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: onHistory) {
                     Image(systemName: "clock.arrow.circlepath")
                 }
                 .accessibilityLabel("查看历史记录")
+            }
+            ToolbarItem(placement: .principal) {
+                Text("\(profile.nickname)成长记录")
+                    .font(.system(size: 19, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .opacity(0.6)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: onSettings) {
@@ -78,9 +63,9 @@ struct HomeView: View {
             }
         }
         .onChange(of: saveSuccess) { _, newValue in
-            guard newValue != nil else { return }
+            guard let newValue else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                showingShareCard = true
+                openShareCard(for: newValue.recordId)
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.4) {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
@@ -88,10 +73,13 @@ struct HomeView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingShareCard) {
-            if let record = selectedRecordForShare {
-                ShareCardPreviewView(profile: profile, record: record)
-            }
+        .onChange(of: records.count) { _, _ in
+            guard let recordId = saveSuccess?.recordId, shareRecord == nil else { return }
+            openShareCard(for: recordId)
+        }
+        .sheet(item: $shareRecord) { record in
+            ShareCardPreviewView(profile: profile, record: record, treeRecordCount: records.count)
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -107,58 +95,28 @@ struct HomeView: View {
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 18)
                     .padding(.vertical, 11)
-                    .background(.ultraThinMaterial)
+                    .background(XiaoYaDesignTokens.Color.cardBackground)
                     .clipShape(Capsule())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("宝宝出生时间标签")
             .accessibilityHint("双击切换天数、月龄和下个月龄倒计时")
 
-            Text("把每一个第一次，养成一棵会长大的小树。")
-                .font(.callout)
+            Text("每一个第一次，\n都会让小树长出一片叶子")
+                .font(XiaoYaDesignTokens.Font.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
     }
 
-    private var summary: some View {
-        VStack(spacing: 12) {
-            Text(treeState.stage.message)
-                .font(.title3.weight(.semibold))
-                .multilineTextAlignment(.center)
-
-            Text("已点亮 \(treeState.recordCount) 个成长瞬间")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            if let latestRecord {
-                Label("最近：\(latestRecord.title)", systemImage: "sparkle")
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(Color(uiColor: .systemGreen))
-            } else {
-                Text("从今天起，记录每一个第一次。")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(20)
-        .background(Color(uiColor: .systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    private var growthTreeHero: some View {
+        GrowthTreeView(recordCount: records.count, highlightLatest: saveSuccess != nil)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 340)
+        .padding(.vertical, 8)
     }
 
-    private var primaryActions: some View {
-        Button(action: onHistory) {
-            HStack {
-                Label("查看历史记录", systemImage: "list.bullet.rectangle")
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(18)
-            .background(Color(uiColor: .systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        }
-        .buttonStyle(.plain)
+    private func openShareCard(for recordId: UUID) {
+        shareRecord = records.first { $0.id == recordId }
     }
 }

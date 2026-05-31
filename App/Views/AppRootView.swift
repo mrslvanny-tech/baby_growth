@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import XiaoyaGrowthCore
 
 struct AppRootView: View {
     @Environment(\.modelContext) private var modelContext

@@ -4,13 +4,13 @@ import XiaoyaGrowthCore
 
 @Model
 final class BabyProfile {
-    @Attribute(.unique) var id: UUID
-    var nickname: String
-    var birthDate: Date
+    var id: UUID = UUID()
+    var nickname: String = ""
+    var birthDate: Date = Date()
     var gender: String?
     var avatarLocalIdentifier: String?
-    var createdAt: Date
-    var updatedAt: Date
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
 
     init(
         id: UUID = UUID(),
@@ -42,18 +42,18 @@ final class BabyProfile {
 
 @Model
 final class MilestoneRecord {
-    @Attribute(.unique) var id: UUID
-    var babyId: UUID
+    var id: UUID = UUID()
+    var babyId: UUID = UUID()
     var templateId: String?
-    var categoryRawValue: String
-    var title: String
+    var categoryRawValue: String = MilestoneCategory.grossMotor.rawValue
+    var title: String = ""
     var note: String?
-    var occurredAt: Date
-    var mediaLocalIdentifiers: [String]
-    var moodTags: [String]
-    var visualElementTypeRawValue: String
-    var createdAt: Date
-    var updatedAt: Date
+    var occurredAt: Date = Date()
+    var mediaLocalIdentifiers: [String] = []
+    var moodTags: [String] = []
+    var visualElementTypeRawValue: String = TreeDecorationType.leaf.rawValue
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
 
     init(
         id: UUID = UUID(),
