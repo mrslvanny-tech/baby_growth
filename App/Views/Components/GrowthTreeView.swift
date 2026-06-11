@@ -28,35 +28,29 @@ struct GrowthTreeView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
-            ZStack {
-                if let previousImageName {
-                    Image(previousImageName)
-                        .resizable()
-                        .scaledToFit()
-                        .opacity(isAnimating ? 0 : 1)
-                        .scaleEffect(reduceMotion ? 1 : (isAnimating ? 0.96 : 1))
-                }
+            VStack(spacing: 12) {
+                ZStack {
+            // 替换图片树为像素树叶树
+                PixelGrowingTreeView(
+                treeState: TreeStateCalculator.state(
+                    records: (0..<recordCount).map { _ in
+                        MilestoneRecordDraft(
+                            category: .custom,
+                            title: "",
+                            occurredAt: Date()
+                        )
+                    }
+                ),
+                highlightLatest: highlightLatest
+            )
 
-                Image(displayedImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .opacity(previousImageName == nil ? 1 : (isAnimating ? 1 : 0))
-                    .scaleEffect(reduceMotion ? 1 : (previousImageName == nil ? 1 : (isAnimating ? 1 : 0.96)))
-                    .shadow(
-                        color: Color.green.opacity(glowRadius > 8 ? 0.25 : (highlightLatest ? 0.16 : 0.08)),
-                        radius: glowRadius,
-                        x: 0,
-                        y: 8
-                    )
-
-                if showParticles && !reduceMotion {
-                    LeafParticlesView()
-                        .transition(.opacity)
-                }
+            if showParticles && !reduceMotion {
+                LeafParticlesView()
+                    .transition(.opacity)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 260)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 260)
             .animation(.easeInOut(duration: reduceMotion ? 0.25 : 0.45), value: isAnimating)
             .animation(.easeInOut(duration: 0.2), value: showParticles)
             .animation(.easeInOut(duration: 0.22), value: glowRadius)
